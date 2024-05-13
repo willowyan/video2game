@@ -22,14 +22,10 @@ from pykdtree.kdtree import KDTree
 
 
 
-def convert_samples_to_mesh_sphere(
-    pytorch_3d_tensor,
-    bbox,
-    level=0.5,
-    roi=None,
-):
+def convert_samples_to_mesh_sphere(pytorch_3d_tensor, bbox, level=0.5, roi=None):
     """
-    Convert sdf samples to .ply
+    Convert a signed distance field (SDF) into mesh (.ply) using Marching Cubes.
+
     :param pytorch_3d_tensor: a torch.FloatTensor of shape (n,n,n)
     :voxel_grid_origin: a list of three floats: the bottom, left, down origin of the voxel grid
     :voxel_size: float, the size of the voxels
@@ -39,7 +35,7 @@ def convert_samples_to_mesh_sphere(
 
     assert roi is not None
     numpy_3d_tensor = pytorch_3d_tensor.numpy()
-    voxel_size = list((bbox[1]-bbox[0]) / (np.array(pytorch_3d_tensor.shape) - 1))
+    voxel_size = list((bbox[1]-bbox[0]) / (np.array(pytorch_3d_tensor.shape) - 1)) # voxel size is calculated based on bbox and tensor shape
 
     print("start marching cubes")
 
@@ -156,6 +152,9 @@ def mark_unseen_triangles(glctx, vertices, triangles, mvps, H, W):
     return mask # [N]
 
 def fix_mesh(vertices, faces, target_len = 0.002):
+    """
+    Fix and optimize 3D mesh by removing degenerated triangles, spliting long edges, collapsing short edges, etc.
+    """
     mesh = pymesh.form_mesh(vertices, faces)
 
     print("Target resolution: {} mm".format(target_len))
